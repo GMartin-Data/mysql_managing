@@ -27,7 +27,7 @@ jobs:
 
       # Step 4: Install project's dependencies using uv
       - name: Install dependencies
-        run: uv pip install . pytest ruff
+        run: uv pip install --system . pytest ruff
 
       # Step 5: Run the linter (The "Fit and Finish" check)
       - name: Lint with ruff
