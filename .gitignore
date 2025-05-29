@@ -31,3 +31,8 @@ venv/
 ENV/
 env/
 virtualenv/
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/
