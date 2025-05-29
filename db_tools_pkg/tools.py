@@ -45,7 +45,7 @@ def execute_command(sql_command: str, db_engine: Engine) -> bool:
                 f"✅ Admin command executed successfully: {sql_command[:50]}..."
             )
             return True
-    except SQLAlchemyError as e:
+    except SQLAlchemyError:
         logger.error(
             f"❌ An error occurred with the admin command: {sql_command[:50]}...",
             exc_info=True,
@@ -91,7 +91,7 @@ def run_sql(
                     # If an error occured within the transaction, roll it back
                     transaction.rollback()
                     raise  # Re-raise the exception to be called by outer block
-    except SQLAlchemyError as e:
+    except SQLAlchemyError:
         logger.error(
             f"❌ A database error occurred while executing: {sql[:50]}...",
             exc_info=True,
