@@ -39,4 +39,4 @@ jobs:
 
       # Step 6: Run the tests (The "Performance" check)
       - name: Test with pytest
-        run: pytest
+        run: python -m pytest
