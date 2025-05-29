@@ -27,7 +27,11 @@ jobs:
 
       # Step 4: Install project's dependencies using uv
       - name: Install dependencies
-        run: uv pip install --system .[dev]
+        run: |
+          # 4.1: Install the main project and its core dependencies
+          uv pip install --system .
+          # 4.2: Explicitely install development tools
+          run: uv pip install --system pytest pytest-cov ruff
 
       # Step 5: Linter
       - name: Lint with ruff
