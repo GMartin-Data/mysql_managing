@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 from sqlalchemy import create_engine, Engine
 
-from db_tools_pkg import run_sql, execute_command
+from db_tools_pkg import run_sql, execute_command, create_read_only_user
 
 
 @pytest.fixture
@@ -230,3 +230,78 @@ def test_run_sql_delete_data(sqlite_engine: Engine):
     )
     assert isinstance(df_stuff, pd.DataFrame)
     assert df_stuff.iloc[0]["count"] == 1
+
+
+# --- New tests to improve coverage ---
+def test_run_sql_handles_sqlalchemy_error_gracefully(sqlite_engine: Engine):
+    """
+    Tests that run_sql catches SQLAlchemyError and returns None, logging the error.
+    We trigger this by trying to query a non-existent table.
+    """
+    # Ensure a table that *does* exist is there first, so the connection itself is fine.
+    execute_command(
+        "CREATE TABLE IF NOT EXISTS some_existing_table (id INT);", sqlite_engine
+    )
+
+    bad_sql_query = "SELECT * FROM non_existent_table WHERE id = :id_val;"
+    result = run_sql(bad_sql_query, sqlite_engine, params={"id_val": 1})
+
+    assert result is None, "run_sql should return None when a SQLAlchemyError occurs."
+    # TODO: In a real scenario, you would also check your logs to ensure the error was logged.
+    # Pytest's 'caplog' fixture can be used for this, but let's keep it simple for now.
+
+
+def test_execute_command_handles_sqlalchemy_error_gracefully(sqlite_engine: Engine):
+    """
+    Tests that execute_command catches SQLAlchemyError and returns False, logging the error.
+    We trigger this by trying to create a table that already exists (without IF NOT EXISTS).
+    """
+    table_name = "another_test_table"
+    create_sql = f"CREATE TABLE {table_name} (id INT);"  # No IF NOT EXISTS
+
+    # First creation should succeed
+    assert execute_command(create_sql, sqlite_engine) is True
+
+    # Second creation should fail because the table already exists
+    success_on_retry = execute_command(create_sql, sqlite_engine)
+
+    assert success_on_retry is False, (
+        "execute_command should return False when a SQLAlchemyError occurs."
+    )
+
+
+def test_create_read_read_only_user_logic_flow(sqlite_engine: Engine, monkeypatch):
+    """
+    Tests the logical flow of create_read_only_user,
+    assuming execute_command calls succeed of fail as mocked.
+    This tests doesn't verify actual user creation in SQLite (which is limited)
+    but checks the Python conditional logic.
+    """
+
+    # We use monkeypatch to control the return value of execute_command
+    # without actually running SQL against SQLite for user creation.
+
+    # Scenario 1: All execute_command calls succeed
+    def mock_execute_command_success(sql_command: str, db_engine: Engine) -> bool:
+        print(f"👍 Mocked execute_command SUCCESS for: {sql_command[:30]}...")
+        return True
+
+    monkeypatch.setattr(
+        "db_tools_pkg.tools.execute_command", mock_execute_command_success
+    )
+    success = create_read_only_user("testuser1", "password", "testdb", sqlite_engine)
+    assert success is True
+
+    # Scenario 2: First execute_command (CREATE USER) fails
+    def mock_execute_command_fail_first(sql_command: str, db_engine: Engine) -> bool:
+        if "CREATE USER" in sql_command:
+            print(f"👎 Mocked execute_command FAIL for: {sql_command[:30]}...")
+            return False
+        print(f"👍 Mocked execute_command SUCCESS for: {sql_command[:30]}...")
+        return True
+
+    monkeypatch.setattr(
+        "db_tools_pkg.tools.execute_command", mock_execute_command_fail_first
+    )
+    success = create_read_only_user("testuser2", "password", "testdb", sqlite_engine)
+    assert success is False
