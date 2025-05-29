@@ -4,13 +4,30 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "pandas>=2.2.3",
-    "sqlalchemy>=2.0.41",
-]
+dependencies = ["pandas>=2.2.3", "sqlalchemy>=2.0.41"]
 
 [dependency-groups]
-dev = [
-    "pytest>=8.3.5",
-    "ruff>=0.11.11",
-]
+dev = ["pytest>=8.3.5", "pytest-cov>=6.1.1", "ruff>=0.11.11"]
+
+[tool.coverage.run]
+# Specifies which package/module to measure coverage for (matches --cov)
+source = ["db_tools_pkg"]
+
+omit = ["db_tools_pkg/__init__.py", "tests/*", ".venv/*"]
+
+
+[tool.coverage.report]
+# Fail the build under the threshold (enable later)
+# fail_under = 80
+
+# Show lines that were not executed
+show_missing = true
+
+# Include all files in the report, even if 100% covered
+# Set to true to only show files with less than 100% coverage
+skip_covered = false
+
+# exclude_lines = [
+#     "pragma: no cover",
+#     "if __name__ == .__main__.:"
+# ]

@@ -27,9 +27,13 @@ jobs:
 
       # Step 4: Install project's dependencies using uv
       - name: Install dependencies
-        run: uv pip install --system . pytest ruff
+        run: |
+          # 4.1: Install the main project and its core dependencies
+          uv pip install --system .
+          # 4.2: Explicitely install development tools
+          uv pip install --system pytest pytest-cov ruff
 
-      # Step 5: Run the linter (The "Fit and Finish" check)
+      # Step 5: Linter
       - name: Lint with ruff
         run: |
           # stop the build if there are any linter errors
@@ -37,6 +41,6 @@ jobs:
           # check formatting
           ruff format . --check
 
-      # Step 6: Run the tests (The "Performance" check)
+      # Step 6: Test with Pytest with coverage report
       - name: Test with pytest
-        run: python -m pytest
+        run: python -m pytest --cov=db_tools_pkg --cov-report=xml --cov-report=term-missing
