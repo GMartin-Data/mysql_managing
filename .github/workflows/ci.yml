@@ -31,7 +31,7 @@ jobs:
           # 4.1: Install the main project and its core dependencies
           uv pip install --system .
           # 4.2: Explicitely install development tools
-          run: uv pip install --system pytest pytest-cov ruff
+          uv pip install --system pytest pytest-cov ruff
 
       # Step 5: Linter
       - name: Lint with ruff
